@@ -42,6 +42,10 @@ public:
 			trail.erase(trail.begin(), trail.begin() + (trail.size() - length));
 		}
 	}
+	void calculatePosition(){
+		x += blockSize * xSpeed;
+		y += blockSize * ySpeed;
+	}
 };
 
 class Wall
@@ -86,19 +90,55 @@ class SnakeMaze : public olc::PixelGameEngine
 public:
 	SnakeMaze()
 	{
-		sAppName = "Snake";
+		sAppName = "Snake Maze";
 	}
+
 	struct lightCoord { float x; float y; float fBlend; };
-	Snake s;
+
+	int board[21][21] = { 0 };
+
+	Snake snakeUser;
+	Wall wall;
+
 private:
 	float last_update;
 	bool title;
 public:
 	bool OnUserCreate() override
 	{
+		srand(time(NULL));
+
 		title = true;
 		last_update = 0.0f;
-		s.trail.push_back({s.x, s.y});
+		snakeUser.trail.push_back({snakeUser.x, snakeUser.y});
+
+		// Initialise walls
+		wall.initWalls();
+		for(int x = 0; x < ScreenWidth()/snakeUser.blockSize; x+= 2){
+			for(int y = 0; y < ScreenHeight()/snakeUser.blockSize; y+= 2){
+				int wallNo = rand() % 4;
+				if (rand() % 5)
+					wallNo = 0;
+
+				unsigned int randBlock = wall.walls[wallNo];
+				unsigned int bit_n = randBlock & 1;
+				int x_scale = x ;
+				int y_scale = y ;
+
+				board[x_scale][y_scale] = bit_n;
+				randBlock >>= 1;
+				bit_n = randBlock & 1;
+				board[x_scale][y_scale+1] = bit_n;
+				randBlock >>= 1;
+				bit_n = randBlock & 1;
+				board[x_scale+1][y_scale] = bit_n;
+				randBlock >>= 1;
+				bit_n = randBlock & 1;
+				board[x_scale+1][y_scale+1] = bit_n;
+				randBlock >>= 1;
+			}
+		}
+
 		return true;
 	}
 	bool OnUserUpdate(float fElapsedTime) override
@@ -125,21 +165,21 @@ public:
 			}
 
 		} else {
-			if (UP.bHeld && s.ySpeed != 1.0f){
-				s.xSpeed = 0.0f;
-				s.ySpeed = -1.0f;
+			if (UP.bHeld && snakeUser.ySpeed != 1.0f){
+				snakeUser.xSpeed = 0.0f;
+				snakeUser.ySpeed = -1.0f;
 			}
-			else if (DOWN.bHeld && s.ySpeed != -1.0f){
-				s.xSpeed = 0.0f;
-				s.ySpeed = 1.0f;
+			else if (DOWN.bHeld && snakeUser.ySpeed != -1.0f){
+				snakeUser.xSpeed = 0.0f;
+				snakeUser.ySpeed = 1.0f;
 			} 
-			else if (LEFT.bHeld && s.xSpeed != 1.0f){
-				s.xSpeed = -1.0f;
-				s.ySpeed = 0.0f;
+			else if (LEFT.bHeld && snakeUser.xSpeed != 1.0f){
+				snakeUser.xSpeed = -1.0f;
+				snakeUser.ySpeed = 0.0f;
 			}
-			else if (RIGHT.bHeld && s.xSpeed != -1.0f){
-				s.xSpeed = 1.0f;
-				s.ySpeed = 0.0f;
+			else if (RIGHT.bHeld && snakeUser.xSpeed != -1.0f){
+				snakeUser.xSpeed = 1.0f;
+				snakeUser.ySpeed = 0.0f;
 			}
 			else if (RESET.bHeld){
 				title = true;
@@ -148,25 +188,33 @@ public:
 				exit(0);
 			}
 
-			if (last_update > s.speed) {
-				s.x += s.blockSize * s.xSpeed;
-				s.y += s.blockSize * s.ySpeed;
+			if (last_update > snakeUser.speed) {
+				// std::cout << "X: " << snakeUser.x << " Y: " << snakeUser.y << " fEl: " << fElapsedTime << std::endl;
+
+				// Calculations
+				snakeUser.shift();
+				snakeUser.calculatePosition();
 
 				// Clear
 				FillRect(0, 0, ScreenWidth(), ScreenHeight(), olc::VERY_DARK_MAGENTA);
 
 				// Draw
-				for (int i = 0; i < s.trail.size(); i++) {
-					FillRect(s.trail[i].x, s.trail[i].y, s.blockSize, s.blockSize, olc::GREEN);
+				for (int i = 0; i < snakeUser.trail.size(); i++) {
+					FillRect(snakeUser.trail[i].x, snakeUser.trail[i].y, snakeUser.blockSize, snakeUser.blockSize, olc::GREEN);
+				}
+
+				for (int x = 0; x < 21; x++) {
+					for (int y = 0; y < 21; y++) {
+						if (board[x][y] == 1) {
+							FillRect(x*10,y*10, snakeUser.blockSize, snakeUser.blockSize, olc::BLUE);
+						}
+					}
 				}
 
 				// Collision
-				s.boundaryCollision(ScreenWidth(), ScreenHeight());
-				// std::cout << "X: " << s.x << " Y: " << s.y << " fEl: " << fElapsedTime << std::endl;
+				snakeUser.boundaryCollision(ScreenWidth(), ScreenHeight());
 
-				s.shift();
-
-				last_update -= s.speed;
+				last_update -= snakeUser.speed;
 			}
 		}
 		last_update += fElapsedTime;
