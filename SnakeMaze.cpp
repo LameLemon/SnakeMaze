@@ -150,7 +150,7 @@ public:
 		olc::HWButton LEFT = GetKey(olc::Key::A);
 		olc::HWButton RIGHT = GetKey(olc::Key::D);
 		olc::HWButton QUIT = GetKey(olc::Key::Q);
-		olc::HWButton RESET = GetKey(olc::Key::R);
+		olc::HWButton PAUSE = GetKey(olc::Key::P);
 		olc::HWButton ENTER = GetKey(olc::Key::ENTER);
 
 		if (title){
@@ -184,7 +184,7 @@ public:
 				snakeUser.xSpeed = 1.0f;
 				snakeUser.ySpeed = 0.0f;
 			}
-			else if (RESET.bHeld){
+			else if (PAUSE.bHeld){
 				title = true;
 			}
 			else if (QUIT.bHeld){
@@ -195,6 +195,12 @@ public:
 				// std::cout << "X: " << snakeUser.x << " Y: " << snakeUser.y << " fEl: " << fElapsedTime << std::endl;
 
 				// Calculations
+				lightCoord lightCoordStruct [13] = { {snakeUser.x-20, snakeUser.y, 0.5f}, 
+									{snakeUser.x-10, snakeUser.y-10, 0.5f}, {snakeUser.x-10, snakeUser.y, 1.0f}, {snakeUser.x-10, snakeUser.y+10, 0.5f}, 
+									{snakeUser.x, snakeUser.y-20, 0.5f}, {snakeUser.x, snakeUser.y-10, 1.0f}, {snakeUser.x, snakeUser.y, 1.0f}, {snakeUser.x, snakeUser.y+10, 1.0f}, {snakeUser.x, snakeUser.y+20, 0.5f}, 
+									{snakeUser.x+10, snakeUser.y-10, 0.5f}, {snakeUser.x+10, snakeUser.y, 1.0f}, {snakeUser.x+10, snakeUser.y+10, 0.5f},
+									{snakeUser.x+20, snakeUser.y, 0.5f} };
+
 				snakeUser.shift();
 				snakeUser.calculatePosition();
 
@@ -215,6 +221,27 @@ public:
 				}
 
 				FillRect(fruit.x, fruit.y, 10, 10, olc::RED);
+
+				int current_light_coord = 0;				
+				SetPixelMode(olc::Pixel::ALPHA);
+				for(int x = -20; x < ScreenWidth()+20; x += snakeUser.blockSize){
+					for (int y = -20; y < ScreenHeight()+20; y += snakeUser.blockSize){
+						if (x == lightCoordStruct[current_light_coord].x && y == lightCoordStruct[current_light_coord].y){
+							if(lightCoordStruct[current_light_coord].fBlend == 1){
+								current_light_coord++;
+							} else {
+								SetPixelBlend(lightCoordStruct[current_light_coord].fBlend);
+								FillRect(lightCoordStruct[current_light_coord].x, lightCoordStruct[current_light_coord].y, snakeUser.blockSize, snakeUser.blockSize, olc::BLACK);
+								current_light_coord++;
+							}
+						} else {
+							SetPixelBlend(0.9f);
+							FillRect(x, y, snakeUser.blockSize, snakeUser.blockSize, olc::BLACK);
+						}
+					}
+				}
+				SetPixelMode(olc::Pixel::NORMAL);
+				SetPixelBlend(1.0f);
 
 				// Collision
 				snakeUser.boundaryCollision(ScreenWidth(), ScreenHeight());
