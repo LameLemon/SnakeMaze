@@ -95,10 +95,12 @@ public:
 
 	struct lightCoord { float x; float y; float fBlend; };
 
-	int board[21][21] = { 0 };
+	int board[31][31] = { 0 };
+	float gameSpeed = 0.20f;
 
 	Snake snakeUser;
 	Wall wall;
+	Food fruit;
 
 private:
 	float last_update;
@@ -155,8 +157,9 @@ public:
 
 			FillRect(0, 0, ScreenWidth(), ScreenHeight(), olc::BLACK);
 
-			DrawString(60, 50, "SNAKE", olc::GREEN, 2);
-			DrawString(20, 80, "Press Enter to start", olc::GREEN, 1);
+			DrawString(110, 50, "SNAKE", olc::GREEN, 2);
+			DrawString(70, 80, "Press Enter to start", olc::GREEN, 1);
+			DrawString(50, ScreenHeight() - 20, "Built for olcCodeJam 2019 \nusing olcPixelGameEngine", olc::GREEN, 1);
 			if (ENTER.bHeld) {
 				title = False;
 				last_update = 0;
@@ -203,20 +206,34 @@ public:
 					FillRect(snakeUser.trail[i].x, snakeUser.trail[i].y, snakeUser.blockSize, snakeUser.blockSize, olc::GREEN);
 				}
 
-				for (int x = 0; x < 21; x++) {
-					for (int y = 0; y < 21; y++) {
+				for (int x = 0; x < ScreenWidth() / snakeUser.blockSize + 1; x++) {
+					for (int y = 0; y < ScreenHeight() / snakeUser.blockSize + 1; y++) {
 						if (board[x][y] == 1) {
 							FillRect(x*10,y*10, snakeUser.blockSize, snakeUser.blockSize, olc::BLUE);
 						}
 					}
 				}
 
+				FillRect(fruit.x, fruit.y, 10, 10, olc::RED);
+
 				// Collision
 				snakeUser.boundaryCollision(ScreenWidth(), ScreenHeight());
 
-				last_update -= snakeUser.speed;
+				if (board[int(snakeUser.x/snakeUser.blockSize)][int(snakeUser.y/snakeUser.blockSize)] == 1){
+					std::cout << "HIT" << std::endl;
+				}
+
+				if (fruit.collision(snakeUser.x, snakeUser.y)){
+					while (board[int(fruit.x/snakeUser.blockSize)][int(fruit.y/snakeUser.blockSize)] != 0)
+						fruit.randomLoc();
+					snakeUser.length++;
+					snakeUser.score += 5;
+				}
+
+				last_update -= gameSpeed;
 			}
 		}
+		DrawString(ScreenWidth() - 30, 5, std::to_string(snakeUser.score), olc::WHITE);
 		last_update += fElapsedTime;
 		return true;
 	}
@@ -226,7 +243,7 @@ int main()
 {
 	Snake s;
 	SnakeMaze demo;
-	if (demo.Construct(200, 200, 3, 3))
+	if (demo.Construct(300, 300, 3, 3))
 		demo.Start();
 	return 0;
 }
