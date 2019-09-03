@@ -52,10 +52,10 @@ public:
 			if (trail[i].x == x && trail[i].y == y){
 				length = 2;
 				score = 0;
-				return False;
+				return false;
 			}
 		}
-		return True; 
+		return true; 
 	}
 	void shift(){
 		coord new_c = {x, y};
@@ -122,12 +122,12 @@ public:
 	}
 };
 
-class Anguidere : public olc::PixelGameEngine
+class Supersnake : public olc::PixelGameEngine
 {
 public:
-	Anguidere()
+	Supersnake()
 	{
-		sAppName = "Anguidere";
+		sAppName = "Supersnake";
 	}
 
 	struct lightCoord { float x; float y; float fBlend; };
@@ -227,7 +227,7 @@ public:
 			DrawString(70, 80, "Press Enter to start", olc::GREEN, 1);
 			DrawString(50, ScreenHeight() - 20, "Built for olcCodeJam 2019 \nusing olcPixelGameEngine", olc::GREEN, 1);
 			if (ENTER.bHeld) {
-				title = False;
+				title = false;
 				last_update = 0;
 			} else if (QUIT.bHeld) {
 				exit(0);
@@ -388,7 +388,7 @@ public:
 					snakeUser.length++;
 					snakeUser.score += 5;
 
-					float level_fl = snakeUser.score / 10;
+					float level_fl = snakeUser.score / 20;
 					if (floor(level_fl) == level_fl && level != level_fl){
 						level = level_fl;
 						newLevel();
@@ -410,7 +410,7 @@ public:
 int main()
 {
 	Snake s;
-	Anguidere demo;
+	Supersnake demo;
 	if (demo.Construct(300, 300, 3, 3))
 		demo.Start();
 	return 0;
