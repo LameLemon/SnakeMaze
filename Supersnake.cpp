@@ -50,8 +50,6 @@ public:
 
 		for (int i = 0; i < trail.size(); i++){
 			if (trail[i].x == x && trail[i].y == y){
-				length = 2;
-				score = 0;
 				return false;
 			}
 		}
@@ -133,7 +131,7 @@ public:
 	struct lightCoord { float x; float y; float fBlend; };
 
 	int board[31][31] = { 0 };
-	float gameSpeed = 0.15f;
+	float gameSpeed = 0.10f;
 
 	Snake snakeUser;
 	Wall wall;
@@ -142,9 +140,10 @@ public:
 
 private:
 	float last_update;
-	bool title;
+	int title;
 	int level = 0;
-	int wall_chance = 8;
+	int wall_chance = 9;
+	int titleSelection = 0;
 public:
 
 	void reset(){
@@ -203,61 +202,99 @@ public:
 	}
 	bool OnUserCreate() override
 	{
-		title = true;
+		title = 0;
 		wall.initWalls();
 		newLevel();
 		return true;
 	}
 	bool OnUserUpdate(float fElapsedTime) override
 	{
-		olc::HWButton UP = GetKey(olc::Key::W);
-		olc::HWButton DOWN = GetKey(olc::Key::S);
-		olc::HWButton LEFT = GetKey(olc::Key::A);
-		olc::HWButton RIGHT = GetKey(olc::Key::D);
-		olc::HWButton FIRE = GetKey(olc::Key::SPACE);
+		olc::HWButton W = GetKey(olc::Key::W);
+		olc::HWButton S = GetKey(olc::Key::S);
+		olc::HWButton A = GetKey(olc::Key::A);
+		olc::HWButton D = GetKey(olc::Key::D);
+		olc::HWButton UP = GetKey(olc::Key::UP);
+		olc::HWButton DOWN = GetKey(olc::Key::DOWN);
+		olc::HWButton LEFT = GetKey(olc::Key::LEFT);
+		olc::HWButton RIGHT = GetKey(olc::Key::RIGHT);
+		olc::HWButton FIRE_1 = GetKey(olc::Key::SPACE);
 		olc::HWButton QUIT = GetKey(olc::Key::Q);
 		olc::HWButton PAUSE = GetKey(olc::Key::P);
 		olc::HWButton ENTER = GetKey(olc::Key::ENTER);
 
-		if (title){
-
+		if (title == 0){
+			if (W.bPressed || UP.bPressed){
+				titleSelection--;
+				if (titleSelection < 0) titleSelection = 2;
+			}
+			if (S.bPressed || DOWN.bPressed){
+				titleSelection++;
+				if (titleSelection > 2) titleSelection = 0;
+			}
 			FillRect(0, 0, ScreenWidth(), ScreenHeight(), olc::BLACK);
 
-			DrawString(110, 50, "SNAKE", olc::GREEN, 2);
-			DrawString(70, 80, "Press Enter to start", olc::GREEN, 1);
+			DrawString(70, 50, "SUPERSNAKE", olc::GREEN, 2);
+			DrawString(45, 70, "Destroyer of the Polyverse", olc::GREEN, 1);
+			DrawString(135, 100, "Play", titleSelection == 0 ? olc::WHITE : olc::GREEN, 1);
+			DrawString(110, 120, "Instructions", titleSelection == 1 ? olc::WHITE : olc::GREEN, 1);			
+			DrawString(125, 140, "Credits", titleSelection == 2 ? olc::WHITE : olc::GREEN, 1);
 			DrawString(50, ScreenHeight() - 20, "Built for olcCodeJam 2019 \nusing olcPixelGameEngine", olc::GREEN, 1);
-			if (ENTER.bHeld) {
-				title = false;
+			if (ENTER.bPressed) {
 				last_update = 0;
+				if(titleSelection == 0) title = 1;
+				else if (titleSelection == 1) title = 2;
+				else if (titleSelection == 2) title = 3;
+				
 			} else if (QUIT.bHeld) {
 				exit(0);
 			}
 
+		} else if (title == 2){
+			FillRect(0, 0, ScreenWidth(), ScreenHeight(), olc::BLACK);
+			DrawString(25, 80, "W, A, S, D or arrow keys to move", olc::GREEN, 1);		
+			DrawString(90, 100, "Space to shoot", olc::GREEN, 1);		
+			DrawString(105, 120, "P to pause", olc::GREEN, 1);
+			DrawString(105, 140, "Q to quite", olc::GREEN, 1);
+			DrawString(90, 160, "Enter to go back", olc::GREEN, 1);
+			if(ENTER.bPressed) title = 0;
+		} else if (title == 3) {
+			FillRect(0, 0, ScreenWidth(), ScreenHeight(), olc::BLACK);
+			DrawString(20, 80, "Thank you to the whole OLC", olc::GREEN, 1);
+			DrawString(20, 90, "community and javidx9 for being", olc::GREEN);
+			DrawString(20, 100, "all around helpful and encouraging", olc::GREEN, 1);		
+			DrawString(20, 110, "others to program regardless of", olc::GREEN, 1);
+			DrawString(20, 120, "skill level.", olc::GREEN, 1);
+			DrawString(20, 160, "Also, thank you to @AniCator", olc::GREEN, 1);
+			DrawString(20, 170, "for the name idea.", olc::GREEN);
+			DrawString(20, 180, ":)", olc::GREEN);
+			DrawString(20, 200, "Enter to go back", olc::GREEN);
+			if(ENTER.bPressed) title = 0;
+
 		} else {
-			if (UP.bHeld && snakeUser.direction != 1){
+			if ((W.bHeld || UP.bHeld) && snakeUser.direction != 1){
 				snakeUser.xSpeed = 0.0f;
 				snakeUser.ySpeed = -1.0f;
 			}
-			else if (DOWN.bHeld && snakeUser.direction != 0){
+			else if ((S.bHeld || DOWN.bHeld) && snakeUser.direction != 0){
 				snakeUser.xSpeed = 0.0f;
 				snakeUser.ySpeed = 1.0f;
 			} 
-			else if (LEFT.bHeld && snakeUser.direction != 3){
+			else if ((A.bHeld || LEFT.bHeld) && snakeUser.direction != 3){
 				snakeUser.xSpeed = -1.0f;
 				snakeUser.ySpeed = 0.0f;
 			}
-			else if (RIGHT.bHeld && snakeUser.direction != 2){
+			else if ((D.bHeld || RIGHT.bHeld) && snakeUser.direction != 2){
 				snakeUser.xSpeed = 1.0f;
 				snakeUser.ySpeed = 0.0f;
 			}
 			else if (PAUSE.bHeld){
-				title = true;
+				title = 0;
 			}
 			else if (QUIT.bHeld){
 				exit(0);
 			}
 
-			if (FIRE.bHeld && (bullet.y <= 0 || bullet.y >= ScreenHeight()) && (bullet.coolDown > 2.0f)){
+			if (FIRE_1.bHeld && (bullet.y <= 0 || bullet.y >= ScreenHeight()) && (bullet.coolDown > 1.5f)){
 				bullet.x = snakeUser.x;
 				bullet.y = snakeUser.y;
 				if (snakeUser.xSpeed > 0)
@@ -398,7 +435,7 @@ public:
 			}
 		}
 		DrawString(5, 5, "Score " + std::to_string(snakeUser.score), olc::WHITE);
-		DrawString(115, 5, "Level " + std::to_string(level + 1), olc::WHITE);
+		DrawString(120, 5, "Level " + std::to_string(level + 1), olc::WHITE);
 		DrawString(ScreenWidth()- 60, 5, "Lives " + std::to_string(snakeUser.lives), olc::WHITE);
 
 		bullet.coolDown += fElapsedTime;
