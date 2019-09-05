@@ -109,7 +109,6 @@ public:
 	void randomLoc() {
 		x = rand() % 20 * 10;
 		y = rand() % 20 * 10;
-		// std::cout << x << " " << y << std::endl;
 	}
 
 	bool collision(float snakeX, float snakeY) {
@@ -157,7 +156,6 @@ public:
 
 	void newLevel(){
 		srand(level + 1);
-		std::cout << "Level " << level + 1 << std::endl;
 		last_update = 0.0f;
 
 		snakeUser.x = snakeUser.y = 0.0f;
